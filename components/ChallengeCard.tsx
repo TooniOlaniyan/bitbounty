@@ -1,19 +1,28 @@
-import { Users, Bitcoin, Calendar } from "lucide-react";
+import { Users, Calendar } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { format } from "date-fns";
 
-export default function ChallengeCard({
-  title,
-  status,
-  dueDate,
-  submissions,
-  onReview,
-}: {
+interface ChallengeCardProps {
+  challengeId: string;
   title: string;
   status: "active" | "expired";
   dueDate: string;
   submissions?: number;
+  userType: "company" | "developer";
   onReview?: () => void;
-}) {
+  onSubmitSolution?: (challengeId: string) => void;
+}
+
+export default function ChallengeCard({
+  challengeId,
+  title,
+  status,
+  dueDate,
+  submissions = 0,
+  userType,
+  onReview,
+  onSubmitSolution,
+}: ChallengeCardProps) {
   const statusConfig = {
     active: {
       label: "Active",
@@ -26,6 +35,12 @@ export default function ChallengeCard({
   };
 
   const config = statusConfig[status];
+
+
+  const buttonText =
+    userType === "company" ? "Review Submissions" : status === "active" ? "Submit Solution" : "";
+  const isButtonDisabled =
+    userType === "developer" && status === "expired" && !onSubmitSolution;
 
   return (
     <div className="border border-grey-500 rounded-xl p-6 hover:shadow-md transition-all duration-300">
@@ -47,7 +62,9 @@ export default function ChallengeCard({
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Due Date</p>
-                <p className="font-semibold text-foreground">{dueDate}</p>
+                <p className="font-semibold text-foreground">
+                  {dueDate}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -64,14 +81,19 @@ export default function ChallengeCard({
 
         <div className="ml-6">
           <Button
-            onClick={onReview}
+            onClick={() =>
+              userType === "company" && onReview ? onReview() : onSubmitSolution && status === "active" ? onSubmitSolution(challengeId) : undefined
+            }
+            disabled={isButtonDisabled}
             className={
-              status === "active"
-                ? "bg-dark-muted/80"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+              status === "active" && userType === "developer"
+                ? "bg-primary hover:bg-primary/80"
+                : status === "active" && userType === "company"
+                  ? "bg-dark-muted/80"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
             }
           >
-            {status === "active" ? "Review Submissions" : "View Results"}
+            {buttonText}
           </Button>
         </div>
       </div>

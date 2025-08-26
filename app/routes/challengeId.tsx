@@ -1,5 +1,6 @@
-import { Link, type LoaderFunctionArgs } from "react-router";
+import { Link, redirect, type LoaderFunctionArgs } from "react-router";
 import { getChallengeById } from "~/firebase/challenges";
+import { getUser } from "~/firebase/auth";
 import { formatDistanceToNow } from "date-fns";
 import type { Route } from "./+types/challengeId";
 import { Calendar, Clock, Users, ArrowLeft } from "lucide-react";
@@ -7,15 +8,16 @@ import MetricsCard from "components/MetricsCard";
 import { calculateTimeRemaining } from "~/lib/utils";
 
 export const clientLoader = async ({ params }: LoaderFunctionArgs) => {
+  const user = await getUser();
   const { challengeId } = params;
   if (!challengeId) throw new Error("Challenge ID is required");
 
   const challenge = await getChallengeById(challengeId);
-  return { challenge };
+  return { challenge, user };
 };
 
 export default function ChallengeDetails({ loaderData }: Route.ComponentProps) {
-  const { challenge } = loaderData;
+  const { challenge, user } = loaderData;
 
   if (!challenge) {
     return (
@@ -147,13 +149,19 @@ export default function ChallengeDetails({ loaderData }: Route.ComponentProps) {
               Submmit Solution
             </h3>
             <p className="text-gray-700 mb-4 text-sm">
-              You need to be logged in as a developer to submit solutions.
+              {user && user.userType === "developer"
+                ? "Submit your solution to this challenge"
+                : "You need to be logged in as a developer to submit solutions."}
             </p>
             <Link
-              to="/signin"
+              to={
+                user && user.userType === "developer" ? "/dashboard" : "/signin"
+              }
               className="inline-block bg-gray-900 text-white px-4 text-xs font-bold py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
             >
-              Sign In as Developer
+              {user && user.userType === "developer"
+                ? "Submit"
+                : " Sign In as Developer"}
             </Link>
           </section>
         </div>

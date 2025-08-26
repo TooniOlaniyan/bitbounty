@@ -6,8 +6,14 @@ import {
 import { DeveloperDashboard, CompanyDashboard } from "~/components/dashboard";
 import { getUser } from "~/firebase/auth";
 import type { Route } from "./+types/dashboard";
-import type { Challenge, CreateChallengeInput } from "~/firebase/challenges";
-import { createChallenge, fetchChallengesByCompany } from "~/firebase/challenges";
+import type {  CreateChallengeInput } from "~/firebase/challenges";
+import {
+  createChallenge,
+  fetchChallengesByCompany,
+  fetchChallenges,
+  submitToChallenge,
+  fetchUserSubmissions,
+} from "~/firebase/challenges";
 import { getDoc, doc } from "firebase/firestore";
 import { db } from "~/firebase/client";
 
@@ -17,11 +23,14 @@ export const clientLoader = async ({ request }: ClientLoaderFunctionArgs) => {
     if (!user) {
       throw redirect(`/`);
     }
-    let challenges = [] 
-    if(user.userType === 'company'){
-      challenges = await fetchChallengesByCompany(user.uid) 
+    let challenges = [];
+
+    if (user.userType === "company") {
+      challenges = await fetchChallengesByCompany(user.uid);
     }
-    return { user , challenges };
+    const submittedChallenges = await fetchUserSubmissions(user.uid);
+    const availableChallenges = await fetchChallenges();
+    return { user, challenges, availableChallenges, submittedChallenges };
   } catch (error) {
     if (error instanceof Response) {
       throw error;
@@ -72,7 +81,7 @@ export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
 
       const userData = userDocSnap.data();
       const companyName = userData.displayName || "Unknown Company";
-      const companyid = userData.uid
+      const companyid = userData.uid;
 
       const challengeData: CreateChallengeInput = {
         title,
@@ -103,16 +112,58 @@ export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
         message: "Challenge created successfully!",
       };
     }
+    if (intent === "submit-challenge") {
+      const user = await getUser();
+      if (!user || user.userType !== "developer") {
+        return {
+          error: "Unauthorized: Only developers can submit to challenges",
+          status: 403,
+        };
+      }
+
+      const challengeId = formData.get("challengeId")?.toString();
+      const title = formData.get("title")?.toString();
+      const companyName = formData.get("compnayName")?.toString();
+      const userId = formData.get("userId")?.toString();
+      const submissionLink = formData.get("githubUrl")?.toString();
+      const liveLink = formData.get("liveUrl")?.toString();
+      const shaHash = formData.get("shaHash")?.toString();
+
+      if (!challengeId || !userId || !submissionLink || !liveLink) {
+        return {
+          error: "Missing required fields (challengeId, userId, or githubUrl)",
+          status: 400,
+        };
+      }
+
+      const submissionData = {
+        challengeId,
+        userId,
+        submissionLink,
+        liveLink,
+        companyName,
+        title,
+        shaHash: shaHash || undefined,
+      };
+
+      await submitToChallenge(submissionData);
+      return {
+        success: true,
+        message: "Submission created successfully!",
+        status: 200,
+      };
+    }
 
     return { error: "Invalid intent", status: 400 };
   } catch (error) {
     console.error("Error in clientAction:", error);
-    return { error: "Failed to create challenge", status: 500 };
+    return { error: "Failed to submit your solutio", status: 500 };
   }
 };
 
 export default function DashboardPage({ loaderData }: Route.ComponentProps) {
-  const { user , challenges } = loaderData;
+  const { user, challenges, availableChallenges, submittedChallenges } =
+    loaderData;
 
   return (
     <div className="min-h-screen bg-background w-full">
@@ -134,7 +185,11 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
           </div>
 
           {user.userType === "developer" ? (
-            <DeveloperDashboard />
+            <DeveloperDashboard
+              submittedChallenges={submittedChallenges}
+              user={user}
+              availableChallenges={availableChallenges}
+            />
           ) : (
             <CompanyDashboard challenges={challenges} user={user} />
           )}

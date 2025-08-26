@@ -84,7 +84,6 @@ export default function NewChallengeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Show error/success messages */}
         {actionData?.error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />

@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
-import { Label } from "~/components/ui/label";
+import MetricCard from "components/MetricCard";
 import {
   Select,
   SelectContent,
@@ -12,43 +12,7 @@ import { Trophy, Users, CheckCircle } from "lucide-react";
 import NewChallengeDialog from "components/NewChallengeDialog";
 import { calculateTimeRemaining } from "~/lib/utils";
 
-function MetricCard({
-  icon: Icon,
-  title,
-  value,
-  description,
-  trend,
-  trendUp,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  value: string;
-  description: string;
-  trend: string;
-  trendUp: boolean;
-}) {
-  return (
-    <div className="bg-card rounded-2xl p-6 card-shadow border border-grey-500 hover:shadow-lg transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-          <Icon className="w-6 h-6 text-primary" />
-        </div>
-        <div
-          className={`text-sm font-semibold ${trendUp ? "text-success" : "text-muted-foreground"}`}
-        >
-          {trend}
-        </div>
-      </div>
-      <div>
-        <p className="text-sm font-medium text-muted-foreground mb-2">
-          {title}
-        </p>
-        <p className="text-2xl font-bold text-foreground mb-1">{value}</p>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-    </div>
-  );
-}
+
 
 export function CompanyDashboard({ user, challenges }: any) {
   return (
@@ -74,9 +38,7 @@ export function CompanyDashboard({ user, challenges }: any) {
         </TabsTrigger>
       </TabsList>
 
-      {/* Active Challenges Tab */}
       <TabsContent value="active" className="space-y-8">
-        {/* Summary Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricCard
             icon={Trophy}
@@ -122,6 +84,7 @@ export function CompanyDashboard({ user, challenges }: any) {
                   key={index}
                   title={challenge.title}
                   status="active"
+                  userType="company"
                   dueDate={calculateTimeRemaining(challenge.dueDate)}
                   submissions={8}
                   onReview={() => console.log("Review submissions")}
@@ -131,7 +94,6 @@ export function CompanyDashboard({ user, challenges }: any) {
         </div>
       </TabsContent>
 
-      {/* Completed Tab */}
       <TabsContent value="expired" className="space-y-8">
         <div className="bg-card rounded-2xl card-shadow border ">
           <div className="p-8 border-b">
@@ -150,7 +112,6 @@ export function CompanyDashboard({ user, challenges }: any) {
         </div>
       </TabsContent>
 
-      {/* Review Solutions Tab */}
       <TabsContent value="review" className="space-y-8">
         <div className="bg-card rounded-2xl card-shadow border ">
           <div className="p-8 border-b ">

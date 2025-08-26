@@ -1,79 +1,80 @@
-import { Link } from "react-router";
+import { Users, Bitcoin, Calendar } from "lucide-react";
+import { Button } from "~/components/ui/button";
 
-interface ChallengeCardProps {
-  challenge: {
-    id: string;
-    title: string;
-    company: string;
-    difficulty: string;
-    pay: string;
-    dueDate: string;
-    tags: string[];
-    description: string;
-    details?: any;
+export default function ChallengeCard({
+  title,
+  status,
+  dueDate,
+  submissions,
+  onReview,
+}: {
+  title: string;
+  status: "active" | "expired";
+  dueDate: string;
+  submissions?: number;
+  onReview?: () => void;
+}) {
+  const statusConfig = {
+    active: {
+      label: "Active",
+      className: "bg-primary/10 text-primary border-primary/20",
+    },
+    expired: {
+      label: "Completed",
+      className: "bg-success/10 text-success border-success/20",
+    },
   };
-}
 
-const ChallengeCard = ({ challenge }: ChallengeCardProps) => {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-100 text-green-800";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "Hard":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const config = statusConfig[status];
 
   return (
-    <div className="block bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-      <div className="flex flex-col h-full">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(challenge.difficulty)}`}
-              >
-                {challenge.difficulty}
-              </span>
+    <div className="border border-grey-500 rounded-xl p-6 hover:shadow-md transition-all duration-300">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center space-x-3 mb-4">
+            <h4 className="text-md font-semibold text-foreground">{title}</h4>
+            <span
+              className={`px-3 py-1 text-sm font-medium rounded-full border ${config.className}`}
+            >
+              {config.label}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Due Date</p>
+                <p className="font-semibold text-foreground">{dueDate}</p>
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
-              {challenge.title}
-            </h3>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Submissions</p>
+                <p className="font-semibold text-foreground">{submissions}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <p className="text-gray-600 text-sm mb-3 font-semibold">
-          {challenge.company}
-        </p>
-        <p className="text-muted-foreground font-light text-sm mb-4 flex-1 line-clamp-3">
-          {challenge.description}
-        </p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {challenge.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div className="flex justify-between items-center mt-auto">
-          <span className="text-gray-500 text-sm">Due {challenge.dueDate}</span>
-          <Link
-            to={`/challenges/${challenge.id}`}
-            className=" border border-border rounded-md py-1 px-3 font-medium text-xs hover:text-primary hover:font-bold transition-all ease-in 0.3s"
+        <div className="ml-6">
+          <Button
+            onClick={onReview}
+            className={
+              status === "active"
+                ? "bg-dark-muted/80"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }
           >
-            View Details
-          </Link>
+            {status === "active" ? "Review Submissions" : "View Results"}
+          </Button>
         </div>
       </div>
     </div>
   );
-};
-
-export default ChallengeCard;
+}

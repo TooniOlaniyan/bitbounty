@@ -1,10 +1,21 @@
-import { challengesData } from "constants/index";
-import ChallengeCard from "../../components/ChallengeCard";
+import { type LoaderFunctionArgs } from "react-router";
+import type { Route } from "./+types/challenges";
+import { fetchChallenges } from "~/firebase/challenges";
+import ChallengeCard from "../../components/ChallengeListCard";
 
-export default function ChallengesPage() {
+
+export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
+  const challenges = await fetchChallenges();
+
+  return { challenges   };
+};
+
+const ChallengesPage = ({ loaderData }: Route.ComponentProps) => {
+  const { challenges  } = loaderData;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className=" mb-12">
+      <div className="mb-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
           Browse Challenges
         </h1>
@@ -15,10 +26,12 @@ export default function ChallengesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {challengesData.map((challenge) => (
+        {challenges.map((challenge: any) => (
           <ChallengeCard key={challenge.id} challenge={challenge} />
         ))}
       </div>
     </div>
   );
-}
+};
+
+export default ChallengesPage;

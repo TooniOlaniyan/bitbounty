@@ -1,69 +1,142 @@
-import { useSearchParams } from "react-router";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
+import {
+  type ClientActionFunctionArgs,
+  type ClientLoaderFunctionArgs,
+  redirect,
+} from "react-router";
 import { DeveloperDashboard, CompanyDashboard } from "~/components/dashboard";
-import { useState, useEffect } from "react";
+import { getUser } from "~/firebase/auth";
+import type { Route } from "./+types/dashboard";
+import type { Challenge, CreateChallengeInput } from "~/firebase/challenges";
+import { createChallenge, fetchChallengesByCompany } from "~/firebase/challenges";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "~/firebase/client";
 
-export default function DashboardPage() {
-  const [searchParams] = useSearchParams();
-  const [userType, setUserType] = useState<"developer" | "company">(
-    "developer"
-  );
-
-  // Read user type from URL query parameters on component mount
-  useEffect(() => {
-    const typeFromUrl = searchParams.get("type") as "developer" | "company";
-    if (
-      typeFromUrl &&
-      (typeFromUrl === "developer" || typeFromUrl === "company")
-    ) {
-      setUserType(typeFromUrl);
+export const clientLoader = async ({ request }: ClientLoaderFunctionArgs) => {
+  try {
+    const user = await getUser();
+    if (!user) {
+      throw redirect(`/`);
     }
-  }, [searchParams]);
+    let challenges = [] 
+    if(user.userType === 'company'){
+      challenges = await fetchChallengesByCompany(user.uid) 
+    }
+    return { user , challenges };
+  } catch (error) {
+    if (error instanceof Response) {
+      throw error;
+    }
+  }
+};
+
+export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
+  try {
+    const formData = await request.formData();
+    const intent = formData.get("intent");
+
+    if (intent === "create-challenge") {
+      const user = await getUser();
+      if (!user || user.userType !== "company") {
+        return {
+          error: "Unauthorized: Only company users can create challenges",
+          status: 403,
+        };
+      }
+
+      const title = formData.get("title")?.toString();
+      const description = formData.get("description")?.toString();
+      const difficulty = formData.get("difficulty")?.toString();
+      const techStack = formData.getAll("techStack") as string[];
+      const dueDate = formData.get("dueDate")?.toString();
+      const requirements = formData.get("requirements")?.toString();
+      const submissionGuidelines = formData
+        .get("submissionGuidelines")
+        ?.toString();
+      const companyId = formData.get("companyId")?.toString();
+
+      if (
+        !title ||
+        !description ||
+        !difficulty ||
+        !techStack.length ||
+        !dueDate ||
+        !companyId
+      ) {
+        return { error: "Missing required fields", status: 400 };
+      }
+      const userDocRef = doc(db, "users", companyId);
+      const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) {
+        return { error: "Company user not found", status: 404 };
+      }
+
+      const userData = userDocSnap.data();
+      const companyName = userData.displayName || "Unknown Company";
+      const companyid = userData.uid
+
+      const challengeData: CreateChallengeInput = {
+        title,
+        company: companyName,
+        companyid: companyid,
+        difficulty,
+        tags: techStack,
+        description,
+        dueDate,
+        details: {
+          deadline: dueDate,
+          submissions: 0,
+          techStack,
+          fullDescription: description,
+          keyRequirement: requirements
+            ? requirements.split("\n").filter((r) => r.trim())
+            : [],
+          bonusPoints: [],
+          submissionRequirements: submissionGuidelines
+            ? submissionGuidelines.split("\n").filter((s) => s.trim())
+            : [],
+        },
+      };
+
+      await createChallenge(challengeData);
+      return {
+        success: true,
+        message: "Challenge created successfully!",
+      };
+    }
+
+    return { error: "Invalid intent", status: 400 };
+  } catch (error) {
+    console.error("Error in clientAction:", error);
+    return { error: "Failed to create challenge", status: 500 };
+  }
+};
+
+export default function DashboardPage({ loaderData }: Route.ComponentProps) {
+  const { user , challenges } = loaderData;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-8">
-          {/* Page Header */}
           <div className="border-b border-grey-500 pb-8">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
               <div>
-                <h1 className="text-4xl font-bold text-foreground">
-                  {userType === "developer"
-                    ? "Developer Dashboard"
-                    : "Company Dashboard"}
+                <h1 className="text-2xl font-bold text-foreground">
+                  Welcome back {user.name}
                 </h1>
-                <p className="mt-3 text-lg text-muted-foreground">
-                  {userType === "developer"
-                    ? "Track your progress, earnings, and achievements"
-                    : "Manage your challenges and review submissions"}
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {user.userType === "developer"
+                    ? "Track your progress, submissions, and achievements"
+                    : "Create and Manage your challenges and review submissions"}
                 </p>
-              </div>
-
-              {/* User Type Selector */}
-              <div className="flex items-center space-x-4">
-                <label className="text-sm font-semibold text-foreground">
-                  Switch to:
-                </label>
-                <select
-                  value={userType}
-                  onChange={(e) =>
-                    setUserType(e.target.value as "developer" | "company")
-                  }
-                  className="input-field px-4 py-2 text-sm min-w-[180px]"
-                >
-                  <option value="developer">👨‍💻 Developer</option>
-                  <option value="company">🏢 Company</option>
-                </select>
               </div>
             </div>
           </div>
 
-          {/* Dashboard Content */}
-          {userType === "developer" ? (
+          {user.userType === "developer" ? (
             <DeveloperDashboard />
           ) : (
-            <CompanyDashboard />
+            <CompanyDashboard challenges={challenges} user={user} />
           )}
         </div>
       </div>

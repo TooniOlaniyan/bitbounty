@@ -1,11 +1,21 @@
-import { useParams, Link } from "react-router";
-import { challengesData } from "constants/index";
+import { Link, type LoaderFunctionArgs } from "react-router";
+import { getChallengeById } from "~/firebase/challenges";
+import { formatDistanceToNow } from "date-fns";
+import type { Route } from "./+types/challengeId";
 import { Calendar, Clock, Users, ArrowLeft } from "lucide-react";
 import MetricsCard from "components/MetricsCard";
+import { calculateTimeRemaining } from "~/lib/utils";
 
-export default function ChallengeDetails() {
-  const { challengeId } = useParams();
-  const challenge = challengesData.find((c) => c.id === challengeId);
+export const clientLoader = async ({ params }: LoaderFunctionArgs) => {
+  const { challengeId } = params;
+  if (!challengeId) throw new Error("Challenge ID is required");
+
+  const challenge = await getChallengeById(challengeId);
+  return { challenge };
+};
+
+export default function ChallengeDetails({ loaderData }: Route.ComponentProps) {
+  const { challenge } = loaderData;
 
   if (!challenge) {
     return (
@@ -52,7 +62,7 @@ export default function ChallengeDetails() {
               {challenge.difficulty}
             </span>
             <span className="px-2 py-1 bg-gray-100 text-gray-700 font-semibold rounded-md text-xs">
-              {challenge.tags[0]}
+              {challenge?.tags[0]}
             </span>
           </div>
         </div>
@@ -60,15 +70,17 @@ export default function ChallengeDetails() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <MetricsCard
+          value={formatDistanceToNow(details.deadline, {
+            addSuffix: true,
+          })}
           icon={Calendar}
           title="Deadline"
-          value={details.deadline}
         />
 
         <MetricsCard
           icon={Clock}
           title="Time Remaining"
-          value={details.timeRemaining}
+          value={calculateTimeRemaining(details.deadline)}
         />
         <MetricsCard
           icon={Users}
@@ -91,7 +103,7 @@ export default function ChallengeDetails() {
                 Key Requirements
               </h3>
               <ul className="space-y-2">
-                {details.keyRequirements.map((req, index) => (
+                {details?.keyRequirement.map((req, index) => (
                   <li key={index} className="flex items-start">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                     <span className="text-gray-700 text-sm">{req}</span>
@@ -105,7 +117,7 @@ export default function ChallengeDetails() {
               Submission Requirements
             </h3>
             <ul className="space-y-2">
-              {details.submissionRequirements.map((req, index) => (
+              {details?.submissionRequirements?.map((req, index: number) => (
                 <li key={index} className="flex items-start">
                   <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
                   <span className="text-gray-700 text-sm">{req}</span>

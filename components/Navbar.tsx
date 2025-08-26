@@ -1,8 +1,10 @@
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useNavigate } from "react-router";
 import { navItems } from "constants/index";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
-import { useState, useEffect } from "react";
+import { auth } from "~/firebase/client";
+import { logout } from "~/firebase/auth";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,49 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { User, LogOut, Settings } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 const RootNavbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState<"developer" | "company">(
-    "developer"
-  );
-
-  // Check authentication state on component mount and when URL changes
-  useEffect(() => {
-    const checkAuthState = () => {
-      // Check if user is on dashboard page (indicates they're authenticated)
-      const isOnDashboard = window.location.pathname === "/dashboard";
-      if (isOnDashboard) {
-        setIsAuthenticated(true);
-
-        // Get user type from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const typeFromUrl = urlParams.get("type") as "developer" | "company";
-        if (
-          typeFromUrl &&
-          (typeFromUrl === "developer" || typeFromUrl === "company")
-        ) {
-          setUserType(typeFromUrl);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuthState();
-
-    // Listen for URL changes
-    const handleUrlChange = () => checkAuthState();
-    window.addEventListener("popstate", handleUrlChange);
-
-    return () => window.removeEventListener("popstate", handleUrlChange);
-  }, []);
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    // Redirect to home page
-    window.location.href = "/";
+  const navigate = useNavigate();
+  const user = auth.currentUser;
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      window.alert(error);
+    }
   };
 
   return (
@@ -72,11 +43,6 @@ const RootNavbar = () => {
 
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
-              // Hide dashboard tab if user is not authenticated
-              if (item.requiresAuth && !isAuthenticated) {
-                return null;
-              }
-
               const IconComponent = item.icon;
               return (
                 <NavLink
@@ -96,51 +62,44 @@ const RootNavbar = () => {
                 </NavLink>
               );
             })}
+            {user && (
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center space-x-2 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "text-primary bg-secondary px-4 py-2 rounded-lg"
+                      : "text-muted-foreground hover:text-foreground"
+                  )
+                }
+              >
+                Dashboard
+              </NavLink>
+            )}
           </nav>
-
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              // User Avatar Dropdown
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-10 w-10 rounded-full hover:bg-secondary"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <span className="text-sm font-semibold">
-                        {userType === "developer" ? "JD" : "AC"}
-                      </span>
-                    </div>
-                  </Button>
+                  <div className="relative h-10 w-10 bg-dark-primary rounded-full cursor-pointer">
+                    <img
+                      src={user?.photoURL ?? ""}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-3 p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <span className="text-sm font-semibold">
-                        {userType === "developer" ? "JD" : "AC"}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-3 p-3">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-semibold text-foreground">
-                        {userType === "developer" ? "John Doe" : "Acme Corp"}
+                        {user.displayName || "Anonymous"}
                       </p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">
-                        {userType === "developer"
-                          ? "@johncoder"
-                          : "admin@acmecorp.com"}
+                        {user.email}
                       </p>
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="mr-3 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Settings className="mr-3 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -152,7 +111,6 @@ const RootNavbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              // Sign In Button
               <Link to="/signin">
                 <Button className="button-primary">Sign In</Button>
               </Link>

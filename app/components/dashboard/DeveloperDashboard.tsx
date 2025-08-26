@@ -14,22 +14,22 @@ import {
 export function DeveloperDashboard() {
   return (
     <Tabs defaultValue="overview" className="space-y-8">
-      <TabsList className="grid w-full grid-cols-4 bg-muted p-1 rounded-xl">
+      <TabsList className="grid w-full grid-cols-3 border-[1.5px] border-border bg-muted  rounded-xl p-0">
         <TabsTrigger
           value="overview"
-          className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          className="data-[state=active]:bg-primary data-[state=active]:text-muted data-[state=active]:shadow-sm"
         >
           Overview
         </TabsTrigger>
         <TabsTrigger
           value="submissions"
-          className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          className="data-[state=active]:bg-primary data-[state=active]:text-muted data-[state=active]:shadow-sm"
         >
           My Submissions
         </TabsTrigger>
         <TabsTrigger
           value="challenges"
-          className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          className="data-[state=active]:bg-primary data-[state=active]:text-muted data-[state=active]:shadow-sm"
         >
           Available Challenges
         </TabsTrigger>
@@ -59,11 +59,9 @@ export function DeveloperDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <MetricCard
             icon={Trophy}
-            title="Total Earnings"
+            title="Total Challenge"
             value="B0.045"
-            description="Bitcoin earned"
-            trend="+12.5%"
-            trendUp={true}
+            description="Total attempted challenge"
           />
           <MetricCard
             icon={Award}
@@ -78,8 +76,6 @@ export function DeveloperDashboard() {
             title="Pending"
             value="#42"
             description="Challenges Pending"
-            trend="+2.1%"
-            trendUp={false}
           />
         </div>
 
@@ -88,6 +84,9 @@ export function DeveloperDashboard() {
           <h3 className="text-2xl font-bold text-foreground mb-6">
             Recent Activity
           </h3>
+          <p className="text-sm text-muted-foreground/80">
+            Your latest submissions and achievements
+          </p>
           <div className="space-y-4">
             <ActivityItem
               icon={CheckCircle}
@@ -157,8 +156,8 @@ function MetricCard({
   title: string;
   value: string;
   description: string;
-  trend: string;
-  trendUp: boolean;
+  trend?: string;
+  trendUp?: boolean;
 }) {
   return (
     <div className="bg-card rounded-2xl p-8 card-shadow border border-grey-500 hover:shadow-lg transition-all duration-300">

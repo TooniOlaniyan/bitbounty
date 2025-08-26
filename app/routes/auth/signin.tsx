@@ -3,16 +3,21 @@ import { Button } from "~/components/ui/button";
 import { ArrowLeft, Github } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
+import { loginWithGoogle } from "~/firebase/auth";
 
 export default function SigninPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [userType, setUserType] = useState<"developer" | "company">(
     "developer"
   );
 
-  const handleClick = () => {
-    // Navigate to dashboard with user type as query parameter
-    navigate(`/dashboard?type=${userType}`);
+  const handlelogIn = async () => {
+    try {
+      await loginWithGoogle(userType);
+      navigate("/dashboard");
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
@@ -65,10 +70,7 @@ export default function SigninPage() {
           </div>
 
           <div className="space-y-4">
-            <Button
-              className="cursor-pointer w-full bg-foreground text-background hover:bg-foreground/90 h-10 text-base font-semibold rounded-xl transition-all duration-200"
-              onClick={handleClick}
-            >
+            <Button className="cursor-pointer w-full bg-foreground text-background hover:bg-foreground/90 h-10 text-base font-semibold rounded-xl transition-all duration-200">
               <Github className="w-6 h-6 mr-3" />
               Continue with GitHub
             </Button>
@@ -76,6 +78,7 @@ export default function SigninPage() {
             <Button
               variant="outline"
               className="cursor-pointer w-full h-10 text-base font-semibold rounded-xl border-2 border-grey-500 hover:border-primary hover:bg-secondary hover:text-black transition-all duration-200"
+              onClick={handlelogIn}
             >
               <span className="w-6 h-6 mr-3 text-blue-600 font-bold text-lg">
                 G

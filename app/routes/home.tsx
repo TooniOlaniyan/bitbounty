@@ -1,6 +1,7 @@
 import { heroSectionData, howItWorksData } from "constants/index";
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
+import { auth } from "~/firebase/client";
 
 interface IHeroData {
   title: string;

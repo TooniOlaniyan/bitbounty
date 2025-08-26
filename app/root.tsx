@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+// import { AuthProvider } from "./context/AuthContext";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -32,11 +33,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
+      {/* <AuthProvider> */}
+        <body>
+          {children}
+          <ScrollRestoration />
+          <Scripts />
+        </body>
+      {/* </AuthProvider> */}
     </html>
   );
 }

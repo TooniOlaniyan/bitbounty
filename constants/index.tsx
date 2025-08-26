@@ -24,13 +24,6 @@ export const navItems = [
     path: "/audit-log",
     icon: FileText,
   },
-  {
-    id: 3,
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: LayoutDashboard,
-    requiresAuth: true,
-  },
 ];
 
 export const footerSections = [
@@ -93,11 +86,11 @@ export const heroSectionData = [
       },
       {
         label: "Get Started",
-        href: "/signup",
+        href: "/signin",
       },
       {
         label: "Post a Challenge",
-        href: "/signup",
+        href: "/signin",
       },
     ],
   },
@@ -448,4 +441,21 @@ export const auditLogData = [
     challenge: "Challenge: Smart Contract Security Audit",
     timestamp: "5d ago",
   },
+];
+
+export const submissionRequirements = [
+  "Jupyter Notebook with all analysis steps",
+  "Github repository with all source code and data",
+  "A short report summarizing your findings and model performance",
+];
+export const techOptions = [
+  { value: "react", label: "React" },
+  { value: "nodejs", label: "Node.js" },
+  { value: "python", label: "Python" },
+  { value: "solidity", label: "Solidity" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "vue", label: "Vue.js" },
+  { value: "angular", label: "Angular" },
+  { value: "other", label: "Other" },
 ];

@@ -68,6 +68,7 @@ export const firebaseConfig = {
 Deployment Link
 
 👉 https://bitbounty.vercel.app/
+Here is a link to a short Demo https://www.loom.com/share/22ddb516229e458b8cd71bf8cb6d1304?sid=c2b22c86-0290-4216-9f33-448749d351f7
 
 ## Challenges Faced
 
@@ -79,7 +80,7 @@ Solution: Carefully studied the React Router docs, and optimized data fetching w
 
 Time Comparisons with Firebase Timestamps
 
-Challenge: Difficulty comparing Firestore Timestamp objects directly with JS Date.
+Challenge: Difficulty comparing Firestore Timestamp objects directly with JS Date which was the thought process I had to query out the completed challenge i.e if due date is past the current date but it was a bit tricky to handle so I opted for another approach.
 
-Solution: Converted timestamps into JS Dates (timestamp.toDate()) before comparison, ensuring correct filtering of active/completed challenges.
+Solution: I used a flag passed to the challenge collection called active and I used that to query the active one and once the date is passed a job will run to update the status to not-active.
 

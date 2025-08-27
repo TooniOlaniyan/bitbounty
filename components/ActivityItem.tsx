@@ -9,7 +9,7 @@ export function ActivityItem({
   title: string;
   company: string;
   date: string;
-  status: "pending" | "completed" | "rejected";
+  status: "pending" | "approved" | "rejected";
 }) {
   const statusConfig = {
     pending: {
@@ -19,7 +19,7 @@ export function ActivityItem({
       buttoncolor: "text-error",
       buttonBg: "bg-error/20",
     },
-    completed: {
+    approved: {
       color: "text-success",
       bg: "bg-success/10",
       border: "border-success/20",

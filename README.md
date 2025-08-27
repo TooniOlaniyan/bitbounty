@@ -76,7 +76,7 @@ React Router v7(Its relatively new to me, havent used react in a while mostyl Ne
 
 Challenge: Understanding how loaders/actions only work within routes.
 
-Solution: Carefully studied the React Router docs, and optimized data fetching with Promise.all and defer() to reduce load times.
+Solution: Carefully studied the React Router docs, and optimized data fetching with  and defer() and some router 7 docs reccomendation to reduce load times.
 
 Time Comparisons with Firebase Timestamps
 

@@ -11,6 +11,7 @@ import {
   runTransaction,
 } from "firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
+import { calculateTimeRemaining } from "~/lib/utils";
 
 export interface Challenge {
   id: string;
@@ -53,6 +54,7 @@ export interface CreateSubmissionInput {
   shaHash: string;
   title: string;
   companyName: string;
+  username?: string;
 }
 
 export interface CreateChallengeInput {
@@ -63,6 +65,7 @@ export interface CreateChallengeInput {
   tags: string[];
   description?: string;
   dueDate: string;
+  active?: boolean;
   details: {
     deadline: string;
     timeRemaining?: string;
@@ -118,9 +121,15 @@ export const getChallengeById = async (id: string) => {
 export const createChallenge = async (challengeData: CreateChallengeInput) => {
   try {
     const challengesCol = collection(db, "challenges");
+    const dueDate =
+      typeof challengeData.dueDate === "string"
+        ? Timestamp.fromDate(new Date(challengeData.dueDate))
+        : challengeData.dueDate;
+    const currentTime = Timestamp.now();
     const newChallenge = {
       ...challengeData,
-      dueDate: Timestamp.fromDate(new Date(challengeData.dueDate)),
+      dueDate,
+      active: dueDate > currentTime,
       createdAt: Timestamp.now(),
     };
     const docRef = await addDoc(challengesCol, newChallenge);
@@ -165,9 +174,14 @@ export const submitToChallenge = async (
 ) => {
   const submissionsCol = collection(db, "submissions");
   const challengeRef = doc(db, "challenges", submissionData.challengeId);
+  const userRef = doc(db, "users", submissionData.userId);
+  const userSnap = await getDoc(userRef);
+  const username = userSnap.exists() ? userSnap.data().displayName ?? "Unknown User" : "Unknown User";
+  console.log(username)
 
   const newSubmission = {
     ...submissionData,
+    username,
     submissionTime: Timestamp.now(),
     status: "pending" as const,
   };
@@ -200,83 +214,70 @@ export const fetchSubmissionsByChallenge = async (challengeId: string) => {
   })) as Submission[];
 };
 export const fetchActiveChallengesByCompany = async (companyId: string) => {
-  const challengesCol = collection(db, "challenges");
-  const q = query(
-    challengesCol,
-    where("companyId", "==", companyId),
-    where("dueDate", ">", Timestamp.now())
-  );
-  const challengesSnapshot = await getDocs(q);
+  try {
+    const challengesCol = collection(db, "challenges");
+    const q = query(
+      challengesCol,
+      where("companyid", "==", companyId),
+      where("active", "==", true)
+    );
+    const challengesSnapshot = await getDocs(q);
 
-  return challengesSnapshot.docs.map((doc) => {
-    const data = doc.data();
-    const dueDate =
-      data.dueDate instanceof Timestamp
-        ? data.dueDate.toDate().toISOString().split("T")[0]
-        : data.dueDate;
+    return challengesSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const dueDate =
+        data.dueDate instanceof Timestamp
+          ? data.dueDate.toDate().toISOString().split("T")[0]
+          : data.dueDate;
 
-    return {
-      id: doc.id,
-      ...data,
-      dueDate,
-      details: {
-        ...data.details,
-        timeRemaining: calculateTimeRemaining(data.dueDate),
-      },
-    } as Challenge;
-  });
-};
-
-export const fetchCompletedChallengesByCompany = async (companyId: string) => {
-  const challengesCol = collection(db, "challenges");
-  const q = query(
-    challengesCol,
-    where("companyId", "==", companyId),
-    where("dueDate", "<=", Timestamp.now())
-  );
-  const challengesSnapshot = await getDocs(q);
-
-  return challengesSnapshot.docs.map((doc) => {
-    const data = doc.data();
-    const dueDate =
-      data.dueDate instanceof Timestamp
-        ? data.dueDate.toDate().toISOString().split("T")[0]
-        : data.dueDate;
-
-    return {
-      id: doc.id,
-      ...data,
-      dueDate,
-      details: {
-        ...data.details,
-        timeRemaining: calculateTimeRemaining(data.dueDate),
-      },
-    } as Challenge;
-  });
-};
-
-export const reviewSubmission = async (
-  submissionId: string,
-  updates: {
-    status: "pending" | "reviewed" | "accepted" | "rejected";
-    reviewNotes?: string;
-  }
-) => {
-  const submissionRef = doc(db, "submissions", submissionId);
-  await runTransaction(db, async (transaction) => {
-    const submissionSnap = await transaction.get(submissionRef);
-    if (!submissionSnap.exists()) {
-      throw new Error("Submission not found");
-    }
-    transaction.update(submissionRef, {
-      status: updates.status,
-      reviewNotes:
-        updates.reviewNotes || submissionSnap.data().reviewNotes || "",
-      reviewedBy: getUser()?.id || "",
-      reviewedAt: Timestamp.now(),
+      return {
+        id: doc.id,
+        ...data,
+        dueDate,
+        details: {
+          ...data.details,
+          timeRemaining: calculateTimeRemaining(data.dueDate),
+        },
+      } as Challenge;
     });
-  });
+  } catch (error) {
+    console.error("Error fetching active challenges:", error);
+    return [];
+  }
 };
+export const fetchCompletedChallengesByCompany = async (companyId: string) => {
+  try {
+    const challengesCol = collection(db, "challenges");
+    const q = query(
+      challengesCol,
+      where("companyid", "==", companyId),
+      where("active", "==", false)
+    );
+    const challengesSnapshot = await getDocs(q);
+
+    return challengesSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const dueDate =
+        data.dueDate instanceof Timestamp
+          ? data.dueDate.toDate().toISOString().split("T")[0]
+          : data.dueDate;
+
+      return {
+        id: doc.id,
+        ...data,
+        dueDate,
+        details: {
+          ...data.details,
+          timeRemaining: calculateTimeRemaining(data.dueDate),
+        },
+      } as Challenge;
+    });
+  } catch (error) {
+    console.error("Error fetching completed challenges:", error);
+    return [];
+  }
+};
+
 
 export const fetchUserSubmissions = async (userId: string) => {
   const submissionsCol = collection(db, "submissions");
@@ -285,4 +286,66 @@ export const fetchUserSubmissions = async (userId: string) => {
   return snapshot.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() }) as Submission
   );
+};
+export const fetchAllSubmissions = async () => {
+  const submissionsCol = collection(db, "submissions");
+  const submissionsSnapshot = await getDocs(submissionsCol);
+
+  return submissionsSnapshot.docs.map((doc) => {
+    const data = doc.data();
+
+    const submissionTime =
+      data.submissionTime instanceof Timestamp
+        ? formatDistanceToNow(data.submissionTime.toDate(), { addSuffix: true })
+        : data.submissionTime;
+
+    return {
+      id: doc.id,
+      ...data,
+      submissionTime,
+    };
+  });
+};
+export const updateSubmissionStatus = async (
+  submissionId: string,
+  newStatus: "approved" | "rejected"
+) => {
+  const submissionRef = doc(db, "submissions", submissionId);
+  await runTransaction(db, async (transaction) => {
+    const submissionSnap = await transaction.get(submissionRef);
+    if (!submissionSnap.exists()) {
+      throw new Error("Submission not found");
+    }
+    if (submissionSnap.data().status !== "pending") {
+      throw new Error("Cannot update non-pending submission");
+    }
+    transaction.update(submissionRef, { status: newStatus });
+  });
+};
+export const fetchSubmissionsForCompanyChallenges = async (
+  companyId: string
+) => {
+  try {
+    const challengesCol = collection(db, "challenges");
+    const qChallenges = query(
+      challengesCol,
+      where("companyid", "==", companyId)
+    );
+    const challengesSnapshot = await getDocs(qChallenges);
+    const challengeIds = challengesSnapshot.docs.map((doc) => doc.id);
+
+    const submissionsCol = collection(db, "submissions");
+    const qSubmissions = query(
+      submissionsCol,
+      where("challengeId", "in", challengeIds)
+    );
+    const submissionsSnapshot = await getDocs(qSubmissions);
+
+    return submissionsSnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Submission
+    );
+  } catch (error) {
+    console.error("Error fetching submissions for company challenges:", error);
+    return [];
+  }
 };

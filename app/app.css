@@ -119,6 +119,7 @@ body {
   @apply bg-background text-foreground dark:bg-dark-background dark:text-dark-foreground;
   font-family: "Quicksand", sans-serif;
   scroll-behavior: smooth;
+  scrollbar-width: none;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;

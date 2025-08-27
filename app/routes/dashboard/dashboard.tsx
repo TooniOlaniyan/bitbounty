@@ -6,13 +6,17 @@ import {
 import { DeveloperDashboard, CompanyDashboard } from "~/components/dashboard";
 import { getUser } from "~/firebase/auth";
 import type { Route } from "./+types/dashboard";
-import type {  CreateChallengeInput } from "~/firebase/challenges";
+import type { CreateChallengeInput, Challenge } from "~/firebase/challenges";
 import {
   createChallenge,
-  fetchChallengesByCompany,
+  fetchCompletedChallengesByCompany,
   fetchChallenges,
   submitToChallenge,
   fetchUserSubmissions,
+  fetchActiveChallengesByCompany,
+  fetchChallengesByCompany,
+  fetchSubmissionsForCompanyChallenges,
+  updateSubmissionStatus,
 } from "~/firebase/challenges";
 import { getDoc, doc } from "firebase/firestore";
 import { db } from "~/firebase/client";
@@ -23,14 +27,50 @@ export const clientLoader = async ({ request }: ClientLoaderFunctionArgs) => {
     if (!user) {
       throw redirect(`/`);
     }
-    let challenges = [];
-
+    const [submittedChallenges, availableChallenges] = await Promise.all([
+      fetchUserSubmissions(user.uid),
+      fetchChallenges(),
+    ]);
     if (user.userType === "company") {
-      challenges = await fetchChallengesByCompany(user.uid);
+      const [
+        activeChallenges,
+        completedChallenges,
+        allChallenges,
+        submissions,
+      ] = await Promise.all([
+        fetchActiveChallengesByCompany(user.uid),
+        fetchCompletedChallengesByCompany(user.uid),
+        fetchChallengesByCompany(user.uid),
+        fetchSubmissionsForCompanyChallenges(user.uid),
+      ]);
+
+      const totalSubmissionscount = allChallenges.reduce(
+        (sum, challenge) => sum + (challenge.details?.submissions || 0),
+        0
+      );
+
+      return {
+        user,
+        companyChallenges: activeChallenges,
+        availableChallenges,
+        submittedChallenges,
+        activeChallengesCount: activeChallenges.length,
+        completedCompanyChallenges: completedChallenges,
+        totalSubmissionscount,
+        companyChallengeSubmissions: submissions,
+      };
     }
-    const submittedChallenges = await fetchUserSubmissions(user.uid);
-    const availableChallenges = await fetchChallenges();
-    return { user, challenges, availableChallenges, submittedChallenges };
+
+    return {
+      user,
+      companyChallenges: [],
+      availableChallenges,
+      submittedChallenges,
+      activeChallengesCount: 0,
+      completedCompanyChallenges: [],
+      totalSubmissionscount: 0,
+      companyChallengeSubmissions: [],
+    };
   } catch (error) {
     if (error instanceof Response) {
       throw error;
@@ -116,14 +156,15 @@ export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
       const user = await getUser();
       if (!user || user.userType !== "developer") {
         return {
-          error: "Unauthorized: Only developers can submit to challenges",
+          error:
+            "Unauthorized: Only developers can submit to companyChallenges",
           status: 403,
         };
       }
 
       const challengeId = formData.get("challengeId")?.toString();
       const title = formData.get("title")?.toString();
-      const companyName = formData.get("compnayName")?.toString();
+      const companyName = formData.get("companyName")?.toString();
       const userId = formData.get("userId")?.toString();
       const submissionLink = formData.get("githubUrl")?.toString();
       const liveLink = formData.get("liveUrl")?.toString();
@@ -153,17 +194,55 @@ export const clientAction = async ({ request }: ClientActionFunctionArgs) => {
         status: 200,
       };
     }
+    if (intent === "update-submission-status") {
+      const submissionId = formData.get("submissionId")?.toString();
+      const newStatus = formData.get("newStatus")?.toString() as
+        | "approved"
+        | "rejected";
+
+      if (!submissionId || !newStatus) {
+        return { error: "Missing submissionId or newStatus", status: 400 };
+      }
+
+      try {
+        await updateSubmissionStatus(submissionId, newStatus);
+        return {
+          success: true,
+          message: `Submission ${submissionId} updated to ${newStatus}`,
+        };
+      } catch (error) {
+        console.error("Error updating submission status:", error);
+        return { error: "Failed to update submission status", status: 500 };
+      }
+    }
 
     return { error: "Invalid intent", status: 400 };
   } catch (error) {
     console.error("Error in clientAction:", error);
-    return { error: "Failed to submit your solutio", status: 500 };
+    return { error: "Failed to submit your solution", status: 500 };
   }
 };
 
 export default function DashboardPage({ loaderData }: Route.ComponentProps) {
-  const { user, challenges, availableChallenges, submittedChallenges } =
-    loaderData;
+  const {
+    user,
+    companyChallenges,
+    availableChallenges,
+    submittedChallenges,
+    activeChallengesCount,
+    totalSubmissionscount,
+    completedCompanyChallenges,
+    companyChallengeSubmissions,
+  } = loaderData as {
+    user: any;
+    companyChallenges: Challenge[];
+    completedCompanyChallenges: Challenge[];
+    availableChallenges: Challenge[];
+    submittedChallenges: any[];
+    companyChallengeSubmissions: any[];
+    activeChallengesCount: number;
+    totalSubmissionscount: number;
+  };
 
   return (
     <div className="min-h-screen bg-background w-full">
@@ -191,7 +270,14 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
               availableChallenges={availableChallenges}
             />
           ) : (
-            <CompanyDashboard challenges={challenges} user={user} />
+            <CompanyDashboard
+              companyChallenges={companyChallenges}
+              user={user}
+              activeChallengesCount={activeChallengesCount}
+              completedCompanyChallenges={completedCompanyChallenges}
+              totalSubmissionscount={totalSubmissionscount}
+              companyChallengeSubmissions={companyChallengeSubmissions}
+            />
           )}
         </div>
       </div>

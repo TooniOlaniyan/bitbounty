@@ -1,9 +1,23 @@
 import AuditLogCard from "components/AuditLogCard";
-import { auditLogData } from "constants/index";
+import type { ClientLoaderFunctionArgs } from "react-router";
+import { fetchAllSubmissions } from "~/firebase/challenges";
+import type { Route } from "./+types/audit-log";
 
-// Sample audit log data - you can move this to constants later
+export async function clientLoader({ request }: ClientLoaderFunctionArgs) {
+  try {
+    const submissionaudits = await fetchAllSubmissions();
+    return {
+      submissionaudits,
+    };
+  } catch (error) {
+    if (error instanceof Response) {
+      throw error;
+    }
+  }
+}
 
-export default function AuditLogPage() {
+export default function AuditLogPage({ loaderData }: Route.ComponentProps) {
+  const { submissionaudits } = loaderData;
   return (
     <div className="w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-12">
@@ -15,14 +29,16 @@ export default function AuditLogPage() {
       </div>
 
       <div className="space-y-6">
-        {auditLogData.map((entry) => (
-          <AuditLogCard key={entry.id} entry={entry} />
-        ))}
+        {submissionaudits &&
+          submissionaudits.length > 0 &&
+          submissionaudits.map((entry) => (
+            <AuditLogCard key={entry.id} entry={entry} />
+          ))}
       </div>
       <div className="text-center mb-8">
         <div className="inline-flex items-center space-x-2 text-gray-600">
           <span className="text-lg font-medium">
-            {auditLogData.length} events
+            {submissionaudits.length} events
           </span>
         </div>
       </div>

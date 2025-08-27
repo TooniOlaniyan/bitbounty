@@ -74,7 +74,7 @@ export default function SubmissionDialog({
           <input type="hidden" name="challengeId" value={challenge.id} />
           <input type="hidden" name="userId" value={userId} />
           <input type="hidden" name="title" value={challenge.title} />
-          <input type="hidden" name="comapnyName" value={challenge.company} />
+          <input type="hidden" name="companyName" value={challenge.company} />
           <div className="space-y-4">
             <div>
               <Label>Challenge Description</Label>

@@ -1,20 +1,20 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import MetricCard from "components/MetricCard";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { ReviewCard } from "components/ReviewCard";
 import ChallengeCard from "components/ChallengeCard";
 import { Trophy, Users, CheckCircle } from "lucide-react";
 import NewChallengeDialog from "components/NewChallengeDialog";
 import { calculateTimeRemaining } from "~/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
-
-
-export function CompanyDashboard({ user, challenges }: any) {
+export function CompanyDashboard({
+  user,
+  companyChallenges,
+  activeChallengesCount,
+  completedCompanyChallenges,
+  totalSubmissionscount,
+  companyChallengeSubmissions,
+}: any) {
   return (
     <Tabs defaultValue="active" className="space-y-8">
       <TabsList className="grid w-full grid-cols-3 border-[1.5px] border-border bg-muted  rounded-xl p-0">
@@ -43,7 +43,7 @@ export function CompanyDashboard({ user, challenges }: any) {
           <MetricCard
             icon={Trophy}
             title="Active Challenges"
-            value="1"
+            value={activeChallengesCount}
             description="Currently running"
             trend="+1"
             trendUp={true}
@@ -51,7 +51,7 @@ export function CompanyDashboard({ user, challenges }: any) {
           <MetricCard
             icon={Users}
             title="Total Submissions"
-            value="20"
+            value={totalSubmissionscount}
             description="Across all challenges"
             trend="+5"
             trendUp={true}
@@ -59,7 +59,7 @@ export function CompanyDashboard({ user, challenges }: any) {
           <MetricCard
             icon={CheckCircle}
             title="Completed"
-            value="1"
+            value={completedCompanyChallenges?.length}
             description="Finished challenges"
             trend="+1"
             trendUp={true}
@@ -76,18 +76,16 @@ export function CompanyDashboard({ user, challenges }: any) {
               <NewChallengeDialog companyId={user.uid} />
             </div>
           </div>
-          <div className="p-8">
-            {challenges &&
-              challenges.length > 0 &&
-              challenges.map((challenge, index) => (
+          <div className="p-8 flex flex-col gap-10">
+            {companyChallenges &&
+              companyChallenges.length > 0 &&
+              companyChallenges.map((challenge, index) => (
                 <ChallengeCard
                   key={index}
                   title={challenge.title}
                   status="active"
-                  userType="company"
                   dueDate={calculateTimeRemaining(challenge.dueDate)}
-                  submissions={8}
-                  onReview={() => console.log("Review submissions")}
+                  submissions={challenge?.details?.submissions}
                 />
               ))}
           </div>
@@ -98,16 +96,21 @@ export function CompanyDashboard({ user, challenges }: any) {
         <div className="bg-card rounded-2xl card-shadow border ">
           <div className="p-8 border-b">
             <h3 className="text-xl font-bold text-foreground">
-              Expired Challenges
+              Expired and Completed Challenges
             </h3>
           </div>
           <div className="p-8">
-            <ChallengeCard
-              title="Smart Contract Audit Challenge"
-              status="expired"
-              dueDate="Winner selected"
-              submissions={0}
-            />
+            {completedCompanyChallenges &&
+              completedCompanyChallenges.length > 0 &&
+              completedCompanyChallenges.map((challenge, index) => (
+                <ChallengeCard
+                  key={index}
+                  title={challenge.title}
+                  status="expired"
+                  dueDate={calculateTimeRemaining(challenge.dueDate)}
+                  submissions={challenge?.details?.submissions}
+                />
+              ))}
           </div>
         </div>
       </TabsContent>
@@ -121,28 +124,24 @@ export function CompanyDashboard({ user, challenges }: any) {
             <p className="text-sm text-muted-foreground mt-2">
               Select a challenge to review submissions
             </p>
-            <div className="space-y-2">
-              <Select name="challenge" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select challenge" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">
-                    {" "}
-                    Build a DeFi Portfolio Tracker
-                  </SelectItem>
-                  <SelectItem value="intermediate">
-                    {" "}
-                    Smart Contract Audit Challenge
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-          </div>
-          <div className="p-8">
-            <div className="space-y-6">
-              <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4"></div>
+            <div className="p-8">
+              {companyChallengeSubmissions &&
+                companyChallengeSubmissions.length > 0 &&
+                companyChallengeSubmissions.map((submission, index) => (
+                  <ReviewCard
+                    key={index}
+                    submissionId={submission.id}
+                    username={submission.username}
+                    status={submission.status}
+                    submissionLink={submission.submissionLink}
+                    liveLink={submission.liveLink}
+                    shaHash={submission.shaHash}
+                    submissionTime={formatDistanceToNow(
+                      submission.submissionTime.toDate(),
+                      { addSuffix: true }
+                    )}
+                  />
+                ))}
             </div>
           </div>
         </div>

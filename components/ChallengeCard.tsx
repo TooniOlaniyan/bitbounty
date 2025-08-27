@@ -3,12 +3,12 @@ import { Button } from "~/components/ui/button";
 import { format } from "date-fns";
 
 interface ChallengeCardProps {
-  challengeId: string;
+  challengeId?: string;
   title: string;
   status: "active" | "expired";
   dueDate: string;
   submissions?: number;
-  userType: "company" | "developer";
+  userType?: "company" | "developer";
   onReview?: () => void;
   onSubmitSolution?: (challengeId: string) => void;
 }
@@ -30,15 +30,14 @@ export default function ChallengeCard({
     },
     expired: {
       label: "Completed",
-      className: "bg-success/10 text-success border-success/20",
+      className: "bg-destructive/20 text-destructive border-destructive/20",
     },
   };
 
   const config = statusConfig[status];
 
-
   const buttonText =
-    userType === "company" ? "Review Submissions" : status === "active" ? "Submit Solution" : "";
+    userType === "company" ? "Review Submissions" :  userType === 'developer' ? "Submit Solution" : '' ;
   const isButtonDisabled =
     userType === "developer" && status === "expired" && !onSubmitSolution;
 
@@ -62,9 +61,7 @@ export default function ChallengeCard({
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Due Date</p>
-                <p className="font-semibold text-foreground">
-                  {dueDate}
-                </p>
+                <p className="font-semibold text-foreground">{dueDate}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -82,7 +79,11 @@ export default function ChallengeCard({
         <div className="ml-6">
           <Button
             onClick={() =>
-              userType === "company" && onReview ? onReview() : onSubmitSolution && status === "active" ? onSubmitSolution(challengeId) : undefined
+              userType === "company" && onReview
+                ? onReview()
+                : onSubmitSolution && status === "active"
+                  ? onSubmitSolution(challengeId)
+                  : undefined
             }
             disabled={isButtonDisabled}
             className={

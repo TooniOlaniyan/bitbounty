@@ -40,3 +40,46 @@ The project relies on the following dependencies:
 Install them by running:
 ```bash
 npm install
+```
+Run the local environment:
+```bash
+npm run dev
+```
+## Firebase Configuration
+
+Create a Firebase project in Firebase Console
+.
+
+Enable Authentication, Firestore Database, and optionally Hosting.
+
+Add a new web app to get config values.
+
+Create a file at src/firebase/config.ts:
+```javascript
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
+```
+Deployment Link
+
+👉 https://bitbounty.vercel.app/
+
+## Challenges Faced
+
+React Router v7(Its relatively new to me, havent used react in a while mostyl Nextjs) Learning Curve
+
+Challenge: Understanding how loaders/actions only work within routes.
+
+Solution: Carefully studied the React Router docs, and optimized data fetching with Promise.all and defer() to reduce load times.
+
+Time Comparisons with Firebase Timestamps
+
+Challenge: Difficulty comparing Firestore Timestamp objects directly with JS Date.
+
+Solution: Converted timestamps into JS Dates (timestamp.toDate()) before comparison, ensuring correct filtering of active/completed challenges.
+

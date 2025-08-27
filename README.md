@@ -70,7 +70,7 @@ Here is a link to a short Demo https://www.loom.com/share/22ddb516229e458b8cd71b
 
 ## Challenges Faced
 
-React Router v7(Its relatively new to me, havent used react in a while mostyl Nextjs) Learning Curve
+React Router v7(Its relatively new to me, havent used plain react in a while mostyl Nextjs) Learning Curve
 
 Challenge: Understanding how loaders/actions only work within routes.
 

@@ -1,13 +1,11 @@
-# Challenge Platform
+# Bitbounty Challenge Platform
 
 ## Project Overview
 The Challenge Platform is a web-based application designed to facilitate the creation, submission, and review of coding challenges. It caters to two primary user types: developers, who can submit solutions to challenges, and companies, who can create challenges and review submissions. Key features include:
 - User authentication and role-based access (developer/company).
 - Challenge creation with customizable details (title, description, due date, etc.).
-- Submission system with GitHub and live URL support.
 - Review system for companies to approve or reject submissions.
-- Real-time dashboard for tracking progress and submissions.
-- Optimized navigation with loading states using React Router v7.
+- 
 
 This platform aims to foster a collaborative environment for skill development and project evaluation.
 

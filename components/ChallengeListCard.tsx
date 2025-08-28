@@ -47,7 +47,7 @@ const ChallengeListCard = ({ challenge }: ChallengeListCardProps) => {
         </div>
 
         <p className="text-gray-600 text-sm mb-3 font-semibold">
-          {challenge.company}
+          <span className="text-xs">Company: </span> {challenge.company}
         </p>
         <p className="text-muted-foreground font-light text-sm mb-4 flex-1 line-clamp-3">
           {challenge.description}
@@ -63,9 +63,7 @@ const ChallengeListCard = ({ challenge }: ChallengeListCardProps) => {
           ))}
         </div>
         <div className="flex justify-between items-center mt-auto">
-          <span className="text-gray-500 text-sm">
-            Due {challenge.dueDate}
-          </span>
+          <span className="text-gray-500 text-sm">Due {challenge.dueDate}</span>
 
           <Link
             to={`/challenges/${challenge.id}`}

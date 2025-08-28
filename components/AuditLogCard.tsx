@@ -8,7 +8,7 @@ interface AuditLogCardProps {
     challengeId: string;
     username: string;
     title: string;
-    status: "pending" | "rejected" | "completed";
+    status: "pending" | "rejected" | "approved";
     submissionLink: string;
     type: "Bounty Paid" | "Winner Selected" | "Solution Submitted";
     actorType: "company" | "developer";
@@ -20,7 +20,7 @@ const AuditLogCard = ({ entry }: AuditLogCardProps) => {
     switch (status) {
       case "pending":
         return <Clock10 className="w-6 h-6 text-orange-500" />;
-      case "compelted":
+      case "approved":
         return <Trophy className="w-6 h-6 text-yellow-500" />;
       case "rejected":
         return <ArrowUpCircle className="w-6 h-6 text-blue-500" />;

@@ -59,7 +59,6 @@ export default function NewChallengeDialog({
     if (actionData?.success) {
       setOpen(false);
       // Reset form or show success toast
-      console.log("Challenge created successfully!");
     }
   }, [actionData]);
 
@@ -169,31 +168,9 @@ export default function NewChallengeDialog({
                 }
               />
             </div>
-
-            {/* Technology Stack */}
-            {/* <div className="space-y-2">
-              <Label htmlFor="techStack">Primary Technology *</Label>
-              <Select name="techStack" required disabled={isSubmitting}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select technology" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="react">React</SelectItem>
-                  <SelectItem value="nodejs">Node.js</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="solidity">Solidity</SelectItem>
-                  <SelectItem value="javascript">JavaScript</SelectItem>
-                  <SelectItem value="typescript">TypeScript</SelectItem>
-                  <SelectItem value="vue">Vue.js</SelectItem>
-                  <SelectItem value="angular">Angular</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div> */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Due Date */}
             <div className="space-y-2">
               <Label htmlFor="dueDate" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />

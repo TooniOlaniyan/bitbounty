@@ -6,9 +6,7 @@ import {
   Trophy,
   TrendingUp,
   Award,
-  Clock,
   CheckCircle,
-  XCircle,
 } from "lucide-react";
 import ChallengeCard from "components/ChallengeCard";
 import { formatDistanceToNow } from "date-fns";
@@ -23,7 +21,7 @@ export function DeveloperDashboard({
   const [selectedChallenge, setSelectedChallenge] = useState<any | null>(null);
   const totalSubmitted = submittedChallenges.length;
   const completedChallenge = submittedChallenges.filter(
-    (s: any) => s.status === "accepted"
+    (s: any) => s.status === "approved"
   ).length;
   const pendingChallenge = submittedChallenges.filter(
     (s: any) => s.status === "pending"
@@ -102,16 +100,15 @@ export function DeveloperDashboard({
           </div>
         </TabsContent>
 
-        {/* Challenges Tab */}
         <TabsContent value="challenges" className="space-y-8">
-          <div className="bg-card rounded-2xl p-8 card-shadow border border-grey-500">
+          <div className="bg-card rounded-2xl p-4 md:p-8 card-shadow border border-grey-500">
             <h3 className="text-2xl font-bold text-foreground mb-4">
               Available Challenges
             </h3>
             <p className="text-lg text-muted-foreground">
               Browse and apply for new challenges
             </p>
-            <div className="p-8 flex flex-col gap-10">
+            <div className="p-2 md:p-8 flex flex-col gap-10">
               {availableChallenges &&
                 availableChallenges.length > 0 &&
                 availableChallenges.map((challenge, index) => (
@@ -144,4 +141,3 @@ export function DeveloperDashboard({
   );
 }
 
-// Metric Card Component

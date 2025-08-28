@@ -1,4 +1,4 @@
-import { Link, redirect, type LoaderFunctionArgs } from "react-router";
+import { Link,  type LoaderFunctionArgs } from "react-router";
 import { getChallengeById } from "~/firebase/challenges";
 import { getUser } from "~/firebase/auth";
 import { formatDistanceToNow } from "date-fns";

@@ -17,7 +17,6 @@ export default [
 
   // Auth layout routes (public)
   layout("layouts/auth-layout.tsx", [
-    route("signup", "routes/auth/signup.tsx"),
     route("signin", "routes/auth/signin.tsx"),
   ]),
 ] satisfies RouteConfig;

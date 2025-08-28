@@ -43,7 +43,7 @@ export default function ChallengeCard({
 
   return (
     <div className="border border-grey-500 rounded-xl p-6 hover:shadow-md transition-all duration-300">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col md:flex-row items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-4">
             <h4 className="text-md font-semibold text-foreground">{title}</h4>

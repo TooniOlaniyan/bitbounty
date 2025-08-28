@@ -1,16 +1,6 @@
 import { Button } from "~/components/ui/button";
 import { footerSections, socialLinks } from "constants/index";
 
-import {
-  Trophy,
-  Github,
-  Twitter,
-  Linkedin,
-  Mail,
-  Heart,
-  Globe,
-} from "lucide-react";
-
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
